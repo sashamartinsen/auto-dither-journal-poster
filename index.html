@@ -17,31 +17,60 @@
 
       <label class="dropzone" for="imageInput" id="dropzone">
         <input id="imageInput" type="file" accept="image/*" />
-        <span>DROP / SELECT IMAGE</span>
-        <small>Everything runs locally in browser</small>
+        <span>PRIMARY IMAGE</span>
+        <small>Drop / select the base image</small>
       </label>
 
       <section class="control-block">
         <h2>Image / Dither</h2>
+
         <div class="two">
           <label class="field">Width<input id="widthInput" type="number" value="1200" min="320" max="2600" step="10" /></label>
           <label class="field">Height<input id="heightInput" type="number" value="1500" min="320" max="2600" step="10" /></label>
         </div>
-        <div class="two">
-          <label class="field">Algorithm<select id="algorithmInput"><option value="fs" selected>Floyd–Steinberg</option><option value="bayer">Bayer 4×4</option></select></label>
-          <label class="field">Dither scale <output id="scaleOut">3</output><input id="scaleInput" type="range" min="3" max="12" value="3" /></label>
+
+        <div class="sub-block">
+          <div class="sub-block__title">Base layer</div>
+          <div class="two">
+            <label class="field">Algorithm<select id="algorithmInput"><option value="fs" selected>Floyd–Steinberg</option><option value="bayer">Bayer 4×4</option></select></label>
+            <label class="field">Dither scale <output id="scaleOut">3</output><input id="scaleInput" type="range" min="3" max="12" value="3" /></label>
+          </div>
+          <div class="two">
+            <label class="field">Threshold <output id="thresholdOut">0</output><input id="thresholdInput" type="range" min="-90" max="90" value="0" /></label>
+            <label class="field">Contrast <output id="contrastOut">0</output><input id="contrastInput" type="range" min="-100" max="100" value="0" /></label>
+          </div>
+          <div class="two">
+            <label class="field">Vignette <output id="vignetteOut">28</output><input id="vignetteInput" type="range" min="0" max="100" value="28" /></label>
+            <label class="field">Grain <output id="grainOut">24</output><input id="grainInput" type="range" min="0" max="90" value="24" /></label>
+          </div>
+          <div class="two">
+            <label class="field">Dark<input id="darkInput" type="color" value="#080204" /></label>
+            <label class="field">Hot<input id="hotInput" type="color" value="#004bff" /></label>
+          </div>
         </div>
-        <div class="two">
-          <label class="field">Threshold <output id="thresholdOut">0</output><input id="thresholdInput" type="range" min="-90" max="90" value="0" /></label>
-          <label class="field">Contrast <output id="contrastOut">0</output><input id="contrastInput" type="range" min="-100" max="100" value="0" /></label>
-        </div>
-        <div class="two">
-          <label class="field">Vignette <output id="vignetteOut">28</output><input id="vignetteInput" type="range" min="0" max="100" value="28" /></label>
-          <label class="field">Grain <output id="grainOut">24</output><input id="grainInput" type="range" min="0" max="90" value="24" /></label>
-        </div>
-        <div class="two">
-          <label class="field">Dark<input id="darkInput" type="color" value="#080204" /></label>
-          <label class="field">Hot<input id="hotInput" type="color" value="#004bff" /></label>
+
+        <div class="sub-block">
+          <label class="toggle-line"><input id="enableSecondLayerInput" type="checkbox" /> Enable second image layer</label>
+          <label class="dropzone dropzone--small" for="imageInput2">
+            <input id="imageInput2" type="file" accept="image/*" />
+            <span>SECONDARY IMAGE</span>
+            <small>Optional overlay image</small>
+          </label>
+          <div class="two">
+            <label class="field">Algorithm<select id="algorithm2Input"><option value="fs" selected>Floyd–Steinberg</option><option value="bayer">Bayer 4×4</option></select></label>
+            <label class="field">Dither scale <output id="scale2Out">3</output><input id="scale2Input" type="range" min="3" max="12" value="3" /></label>
+          </div>
+          <div class="two">
+            <label class="field">Threshold <output id="threshold2Out">0</output><input id="threshold2Input" type="range" min="-90" max="90" value="0" /></label>
+            <label class="field">Contrast <output id="contrast2Out">0</output><input id="contrast2Input" type="range" min="-100" max="100" value="0" /></label>
+          </div>
+          <div class="two">
+            <label class="field">Vignette <output id="vignette2Out">0</output><input id="vignette2Input" type="range" min="0" max="100" value="0" /></label>
+            <label class="field">Grain <output id="grain2Out">0</output><input id="grain2Input" type="range" min="0" max="90" value="0" /></label>
+          </div>
+          <div class="one">
+            <label class="field">Second layer hot<input id="hot2Input" type="color" value="#ff3b47" /></label>
+          </div>
         </div>
       </section>
 

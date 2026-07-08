@@ -6,6 +6,7 @@
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   let sourceImage = null;
+  let sourceImage2 = null;
   let seed = Math.floor(Math.random() * 0xffffffff);
 
   const systemWords = ['NULL', 'SIGNAL', 'VECTOR', 'GHOST', 'SHELL', 'DELTA', 'EXIT', 'VOID', 'SYNC', 'BOOT', 'TRACE', 'ROOT'];
@@ -29,14 +30,12 @@
   }
 
   function updateOutputs() {
-    $('scaleOut').textContent = $('scaleInput').value;
-    $('thresholdOut').textContent = $('thresholdInput').value;
-    $('contrastOut').textContent = $('contrastInput').value;
-    $('vignetteOut').textContent = $('vignetteInput').value;
-    $('grainOut').textContent = $('grainInput').value;
-    $('overlayOut').textContent = $('overlayInput').value;
-    $('textSizeOut').textContent = $('textSizeInput').value;
-    $('densityOut').textContent = $('densityInput').value;
+    ['scale','threshold','contrast','vignette','grain','scale2','threshold2','contrast2','vignette2','grain2','textSize','density','overlay']
+      .forEach((name) => {
+        const input = $(name + 'Input');
+        const out = $(name + 'Out');
+        if (input && out) out.textContent = input.value;
+      });
   }
 
   function floydSteinberg(lum, sw, sh, threshold) {
@@ -67,44 +66,43 @@
     }
   }
 
-  function drawDither() {
-    const w = clamp(Number($('widthInput').value) || 1200, 320, 2600);
-    const h = clamp(Number($('heightInput').value) || 1500, 320, 2600);
-    const scale = clamp(Number($('scaleInput').value) || 3, 3, 12);
-    const threshold = Number($('thresholdInput').value) || 0;
-    const contrast = Number($('contrastInput').value) || 0;
-    const vignette = Number($('vignetteInput').value) || 0;
-    const grain = Number($('grainInput').value) || 0;
-    const algorithm = $('algorithmInput').value;
-    const dark = hexToRgb($('darkInput').value);
-    const hot = hexToRgb($('hotInput').value);
+  function getLayerSettings(prefix = '') {
+    return {
+      algorithm: $(prefix + 'algorithmInput').value,
+      scale: clamp(Number($(prefix + 'scaleInput').value) || 3, 3, 12),
+      threshold: Number($(prefix + 'thresholdInput').value) || 0,
+      contrast: Number($(prefix + 'contrastInput').value) || 0,
+      vignette: Number($(prefix + 'vignetteInput').value) || 0,
+      grain: Number($(prefix + 'grainInput').value) || 0,
+      dark: prefix ? [0,0,0] : hexToRgb($('darkInput').value),
+      hot: hexToRgb($(prefix + 'hotInput').value)
+    };
+  }
 
-    canvas.width = w;
-    canvas.height = h;
-
+  function buildDitherCanvas(imgSource, settings, width, height, placeholderText, transparentDark = false) {
     const small = document.createElement('canvas');
-    const sw = Math.max(1, Math.floor(w / scale));
-    const sh = Math.max(1, Math.floor(h / scale));
+    const sw = Math.max(1, Math.floor(width / settings.scale));
+    const sh = Math.max(1, Math.floor(height / settings.scale));
     small.width = sw;
     small.height = sh;
     const sctx = small.getContext('2d', { willReadFrequently: true });
 
     sctx.fillStyle = '#000';
     sctx.fillRect(0, 0, sw, sh);
-    if (sourceImage) {
-      const [x, y, iw, ih] = fitCover(sourceImage, sw, sh);
-      sctx.drawImage(sourceImage, x, y, iw, ih);
-    } else {
+    if (imgSource) {
+      const [x, y, iw, ih] = fitCover(imgSource, sw, sh);
+      sctx.drawImage(imgSource, x, y, iw, ih);
+    } else if (placeholderText) {
       const grad = sctx.createLinearGradient(0, 0, sw, sh);
       grad.addColorStop(0, '#090909'); grad.addColorStop(0.45, '#aaa'); grad.addColorStop(1, '#030303');
       sctx.fillStyle = grad; sctx.fillRect(0, 0, sw, sh);
-      sctx.fillStyle = '#ddd'; sctx.font = `900 ${Math.floor(sw / 10)}px ${fontStack()}`; sctx.fillText('DROP IMAGE', sw * 0.12, sh * 0.52);
+      sctx.fillStyle = '#ddd'; sctx.font = `900 ${Math.floor(sw / 10)}px ${fontStack()}`; sctx.fillText(placeholderText, sw * 0.08, sh * 0.52);
     }
 
     const img = sctx.getImageData(0, 0, sw, sh);
     const data = img.data;
     const lum = new Float32Array(sw * sh);
-    const cFactor = contrast >= 0 ? 1 + contrast / 28 : 1 + contrast / 100;
+    const cFactor = settings.contrast >= 0 ? 1 + settings.contrast / 28 : 1 + settings.contrast / 100;
     const cx = sw / 2, cy = sh / 2, maxDist = Math.sqrt(cx * cx + cy * cy);
 
     for (let y = 0; y < sh; y += 1) {
@@ -112,29 +110,49 @@
         const di = (y * sw + x) * 4;
         let l = data[di] * 0.299 + data[di + 1] * 0.587 + data[di + 2] * 0.114;
         l = (l - 128) * cFactor + 128;
-        if (vignette > 0) {
+        if (settings.vignette > 0) {
           const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2) / maxDist;
-          l *= 1 - smoothstep(0.38, 1, dist) * (vignette / 100) * 0.96;
+          l *= 1 - smoothstep(0.38, 1, dist) * (settings.vignette / 100) * 0.96;
         }
-        l += (Math.random() - 0.5) * grain;
+        l += (Math.random() - 0.5) * settings.grain;
         lum[y * sw + x] = clamp(l, 0, 255);
       }
     }
 
-    if (algorithm === 'bayer') bayerDither(lum, sw, sh, threshold); else floydSteinberg(lum, sw, sh, threshold);
+    if (settings.algorithm === 'bayer') bayerDither(lum, sw, sh, settings.threshold);
+    else floydSteinberg(lum, sw, sh, settings.threshold);
 
     const out = sctx.createImageData(sw, sh);
     for (let p = 0, i = 0; p < lum.length; p += 1, i += 4) {
-      const col = lum[p] > 0 ? hot : dark;
-      out.data[i] = col[0]; out.data[i + 1] = col[1]; out.data[i + 2] = col[2]; out.data[i + 3] = 255;
+      const isHot = lum[p] > 0;
+      const col = isHot ? settings.hot : settings.dark;
+      out.data[i] = col[0];
+      out.data[i + 1] = col[1];
+      out.data[i + 2] = col[2];
+      out.data[i + 3] = transparentDark ? (isHot ? 255 : 0) : 255;
     }
     sctx.putImageData(out, 0, 0);
+    return small;
+  }
 
+  function drawDither() {
+    const w = clamp(Number($('widthInput').value) || 1200, 320, 2600);
+    const h = clamp(Number($('heightInput').value) || 1500, 320, 2600);
+
+    canvas.width = w;
+    canvas.height = h;
     ctx.imageSmoothingEnabled = false;
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
     ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(small, 0, 0, w, h);
+
+    const baseCanvas = buildDitherCanvas(sourceImage, getLayerSettings(''), w, h, 'DROP IMAGE', false);
+    ctx.drawImage(baseCanvas, 0, 0, w, h);
+
+    if ($('enableSecondLayerInput').checked && sourceImage2) {
+      const overlayCanvas = buildDitherCanvas(sourceImage2, getLayerSettings('2'), w, h, '', true);
+      ctx.drawImage(overlayCanvas, 0, 0, w, h);
+    }
   }
 
   function setFont(size, weight = 400) {
@@ -179,7 +197,7 @@
     const count = Math.floor(6 + density * ((w + h) / 46));
     for (let i = 0; i < count; i += 1) {
       const r = rnd();
-      let text = r < 0.36 ? icons[Math.floor(rnd() * icons.length)] : r < 0.72 ? labels[Math.floor(rnd() * labels.length)] : glyphs[Math.floor(rnd() * glyphs.length)].repeat(2 + Math.floor(rnd() * 7));
+      const text = r < 0.36 ? icons[Math.floor(rnd() * icons.length)] : r < 0.72 ? labels[Math.floor(rnd() * labels.length)] : glyphs[Math.floor(rnd() * glyphs.length)].repeat(2 + Math.floor(rnd() * 7));
       drawText(text, w * (0.04 + rnd() * 0.92), h * (0.05 + rnd() * 0.9), cell * (0.7 + rnd() * 0.42), glyphColor, rnd() > 0.5 ? 'left' : 'center');
     }
   }
@@ -214,15 +232,20 @@
 
   function render() { updateOutputs(); drawDither(); drawOverlay(); }
 
-  function loadFile(file) {
+  function loadFile(file, slot) {
     if (!file || !file.type.startsWith('image/')) return;
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => { sourceImage = img; URL.revokeObjectURL(url); render(); };
+    img.onload = () => {
+      if (slot === 2) sourceImage2 = img; else sourceImage = img;
+      URL.revokeObjectURL(url);
+      render();
+    };
     img.src = url;
   }
 
-  $('imageInput').addEventListener('change', (event) => loadFile(event.target.files[0]));
+  $('imageInput').addEventListener('change', (event) => loadFile(event.target.files[0], 1));
+  $('imageInput2').addEventListener('change', (event) => loadFile(event.target.files[0], 2));
   $('randomBtn').addEventListener('click', () => { seed = Math.floor(Math.random() * 0xffffffff); render(); });
   $('renderBtn').addEventListener('click', render);
   $('downloadBtn').addEventListener('click', () => { const a = document.createElement('a'); a.download = `dither_ascii_${Date.now()}.png`; a.href = canvas.toDataURL('image/png'); a.click(); });
@@ -230,10 +253,13 @@
   const dropzone = $('dropzone');
   ['dragenter', 'dragover'].forEach((name) => dropzone.addEventListener(name, (event) => { event.preventDefault(); dropzone.classList.add('drag'); }));
   ['dragleave', 'drop'].forEach((name) => dropzone.addEventListener(name, (event) => { event.preventDefault(); dropzone.classList.remove('drag'); }));
-  dropzone.addEventListener('drop', (event) => loadFile(event.dataTransfer.files[0]));
+  dropzone.addEventListener('drop', (event) => loadFile(event.dataTransfer.files[0], 1));
 
-  ['wordsInput','widthInput','heightInput','algorithmInput','scaleInput','thresholdInput','contrastInput','vignetteInput','grainInput','darkInput','hotInput','blendModeInput','fontInput','textSizeInput','densityInput','overlayInput','wordColorInput','glyphColorInput']
-    .forEach((id) => { const el = $(id); el.addEventListener('input', render); el.addEventListener('change', render); });
+  [
+    'widthInput','heightInput','algorithmInput','scaleInput','thresholdInput','contrastInput','vignetteInput','grainInput','darkInput','hotInput',
+    'enableSecondLayerInput','algorithm2Input','scale2Input','threshold2Input','contrast2Input','vignette2Input','grain2Input','hot2Input',
+    'wordsInput','blendModeInput','fontInput','textSizeInput','densityInput','overlayInput','wordColorInput','glyphColorInput'
+  ].forEach((id) => { const el = $(id); el.addEventListener('input', render); el.addEventListener('change', render); });
 
   render();
 })();
