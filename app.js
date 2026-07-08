@@ -247,24 +247,24 @@
     const cell = Math.max(12, Math.min(w, h) * 0.016 * textScale);
 
     ctx.save();
-    ctx.globalCompositeOperation = 'screen';
+    ctx.globalCompositeOperation = 'source-over';
 
     const regions = chooseRegions(w, h);
     regions.forEach((region, idx) => {
-      drawAsciiBox(region, cell * (0.9 + rnd() * 0.18), alpha * (0.18 + rnd() * 0.22), glyphColor);
+      drawAsciiBox(region, cell * (0.9 + rnd() * 0.18), alpha * (0.45 + rnd() * 0.55), glyphColor);
       const word = pool[idx % pool.length].toUpperCase();
       const cx = region.x + region.w * (0.3 + rnd() * 0.4);
       const cy = region.y + region.h * (0.45 + rnd() * 0.2);
-      drawText(word, cx, cy, cell * (0.95 + rnd() * 0.3), alpha * (0.42 + rnd() * 0.3), 'center', wordColor, 700);
+      drawText(word, cx, cy, cell * (0.95 + rnd() * 0.3), alpha * (0.75 + rnd() * 0.25), 'center', wordColor, 700);
 
       const label = `${iconSet[Math.floor(rnd() * iconSet.length)]} ${asciiChunks[Math.floor(rnd() * asciiChunks.length)]} ${iconSet[Math.floor(rnd() * iconSet.length)]}`;
-      drawText(label, cx, cy + cell * (0.85 + rnd() * 0.6), cell * 0.82, alpha * (0.22 + rnd() * 0.22), 'center', glyphColor);
+      drawText(label, cx, cy + cell * (0.85 + rnd() * 0.6), cell * 0.82, alpha * (0.55 + rnd() * 0.35), 'center', glyphColor);
     });
 
     const scatteredWords = Math.min(6, Math.max(3, pool.length));
     for (let i = 0; i < scatteredWords; i += 1) {
       const word = pool[i % pool.length].toUpperCase();
-      drawText(word, w * (0.12 + rnd() * 0.76), h * (0.12 + rnd() * 0.76), cell * (0.9 + rnd() * 0.35), alpha * (0.28 + rnd() * 0.22), 'center', wordColor, 700);
+      drawText(word, w * (0.12 + rnd() * 0.76), h * (0.12 + rnd() * 0.76), cell * (0.9 + rnd() * 0.35), alpha * (0.65 + rnd() * 0.35), 'center', wordColor, 700);
     }
 
     const glyphCount = Math.floor((w + h) / 55);
@@ -273,7 +273,7 @@
       const text = useChunk
         ? asciiChunks[Math.floor(rnd() * asciiChunks.length)]
         : asciiBits[Math.floor(rnd() * asciiBits.length)].repeat(1 + Math.floor(rnd() * 5));
-      drawText(text, w * (0.04 + rnd() * 0.92), h * (0.05 + rnd() * 0.9), cell * (0.72 + rnd() * 0.35), alpha * (0.08 + rnd() * 0.18), rnd() > 0.5 ? 'left' : 'center', glyphColor);
+      drawText(text, w * (0.04 + rnd() * 0.92), h * (0.05 + rnd() * 0.9), cell * (0.72 + rnd() * 0.35), alpha * (0.4 + rnd() * 0.6), rnd() > 0.5 ? 'left' : 'center', glyphColor);
     }
 
     ctx.restore();
