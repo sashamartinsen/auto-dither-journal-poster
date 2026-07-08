@@ -9,10 +9,12 @@
   let seed = Math.floor(Math.random() * 0xffffffff);
 
   const systemWords = ['NULL', 'SIGNAL', 'VECTOR', 'GHOST', 'SHELL', 'DELTA', 'EXIT', 'VOID', 'SYNC', 'BOOT', 'TRACE', 'ROOT'];
+  const asciiBits = ['▓', '▒', '░', '█', '╬', '╫', '┼', '┬', '┴', '╳', '╱', '╲', '│', '─', '═', '║', '¦', ':', '.', '+', '*', '0', '1', '<', '>', '[', ']'];
   const asciiChunks = [
-    '╔════════╗', '╚════════╝', '▓▒░', '░▒▓', '█▓▒░', '╳╳╳', '/////', '|||||', '>>>', '<<<',
-    '[SYS]', '[ERR]', '[RUN]', '<root>', '0x00FF', '101101', 'ΔΔΔ', '◆◇◆', '┌─┐', '└─┘', '╬╬╬', '::::', '— — —'
+    '[SYS]', '[ERR]', '[RUN]', '[LOCK]', '<root>', '<void>', '0x00FF', '101101', 'ΔΔΔ', '::', '▓▒░', '█▒█', '<<<', '>>>', '||', '++',
+    '[[]]', '{::}', '/\\', '\\/','<-#->', '[=]', '[I/O]', '<:>'
   ];
+  const iconSet = ['[+]', '[x]', '<+>', '<#>', '/\\', '\\/', '[[]]', '{-}', '<01>', '[::]', '|-|', '<*>'];
 
   function rnd() {
     seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -31,14 +33,51 @@
     return [(w - iw) / 2, (h - ih) / 2, iw, ih];
   }
 
-  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function clamp(v, a, b) {
+    return Math.max(a, Math.min(b, v));
+  }
 
   function updateOutputs() {
     $('scaleOut').textContent = $('scaleInput').value;
     $('thresholdOut').textContent = $('thresholdInput').value;
+    $('vignetteOut').textContent = $('vignetteInput').value;
     $('grainOut').textContent = $('grainInput').value;
     $('overlayOut').textContent = $('overlayInput').value;
     $('textSizeOut').textContent = $('textSizeInput').value;
+  }
+
+  function smoothstep(edge0, edge1, x) {
+    const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+
+  function applyVignetteToContext(targetCtx, w, h, strengthPct) {
+    const strength = clamp(strengthPct / 100, 0, 1);
+    if (strength <= 0) return;
+
+    const img = targetCtx.getImageData(0, 0, w, h);
+    const data = img.data;
+    const cx = w / 2;
+    const cy = h / 2;
+    const maxDist = Math.sqrt(cx * cx + cy * cy);
+    const start = 0.38;
+
+    for (let y = 0; y < h; y += 1) {
+      for (let x = 0; x < w; x += 1) {
+        const dx = x - cx;
+        const dy = y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy) / maxDist;
+        const edge = smoothstep(start, 1, dist);
+        const darken = edge * strength * 0.96;
+        const mult = 1 - darken;
+        const i = (y * w + x) * 4;
+        data[i] *= mult;
+        data[i + 1] *= mult;
+        data[i + 2] *= mult;
+      }
+    }
+
+    targetCtx.putImageData(img, 0, 0);
   }
 
   function drawDither() {
@@ -46,6 +85,7 @@
     const h = clamp(Number($('heightInput').value) || 1500, 320, 2600);
     const pixelScale = Number($('scaleInput').value) || 3;
     const threshold = Number($('thresholdInput').value) || 0;
+    const vignette = Number($('vignetteInput').value) || 0;
     const grain = Number($('grainInput').value) || 0;
     const dark = hexToRgb($('darkInput').value);
     const hot = hexToRgb($('hotInput').value);
@@ -77,6 +117,8 @@
       sctx.font = `900 ${Math.floor(sw / 10)}px monospace`;
       sctx.fillText('DROP IMAGE', sw * 0.12, sh * 0.52);
     }
+
+    applyVignetteToContext(sctx, sw, sh, vignette);
 
     const img = sctx.getImageData(0, 0, sw, sh);
     const data = img.data;
@@ -113,7 +155,101 @@
     sctx.putImageData(out, 0, 0);
 
     ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, w, h);
     ctx.drawImage(small, 0, 0, w, h);
+  }
+
+  function drawAsciiText(text, x, y, size, alpha = 1, align = 'left') {
+    ctx.globalAlpha = alpha;
+    ctx.font = `900 ${Math.max(10, Math.floor(size))}px ui-monospace, Menlo, Consolas, monospace`;
+    ctx.textAlign = align;
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(text, x, y);
+  }
+
+  function repeatedCharLine(char, count) {
+    return char.repeat(Math.max(1, count));
+  }
+
+  function drawAsciiFrame(w, h, alpha, textScale) {
+    const margin = Math.floor(Math.min(w, h) * 0.045);
+    const cell = Math.max(16, Math.floor(Math.min(w, h) * 0.022 * textScale));
+    const cols = Math.max(6, Math.floor((w - margin * 2) / (cell * 0.62)));
+    const rows = Math.max(6, Math.floor((h - margin * 2) / cell));
+    const top = `┌${repeatedCharLine('─', cols)}┐`;
+    const bottom = `└${repeatedCharLine('─', cols)}┘`;
+
+    drawAsciiText(top, margin, margin + cell * 0.8, cell, alpha * 0.72);
+    drawAsciiText(bottom, margin, h - margin, cell, alpha * 0.72);
+
+    for (let i = 1; i < rows; i += 1) {
+      const y = margin + i * cell;
+      drawAsciiText('│', margin, y, cell, alpha * 0.55);
+      drawAsciiText('│', w - margin - cell * 0.3, y, cell, alpha * 0.55);
+    }
+
+    const bandCount = 4 + Math.floor(rnd() * 4);
+    for (let i = 0; i < bandCount; i += 1) {
+      const y = margin + cell * (2 + i * (1.3 + rnd()));
+      const leftBlock = `${asciiChunks[Math.floor(rnd() * asciiChunks.length)]}${repeatedCharLine('·', 2 + Math.floor(rnd() * 8))}`;
+      const rightBlock = `${repeatedCharLine('·', 2 + Math.floor(rnd() * 8))}${asciiChunks[Math.floor(rnd() * asciiChunks.length)]}`;
+      drawAsciiText(leftBlock, margin + cell * 1.1, y, cell * 0.62, alpha * (0.22 + rnd() * 0.3));
+      drawAsciiText(rightBlock, w - margin - cell * 1.2, y, cell * 0.62, alpha * (0.22 + rnd() * 0.3), 'right');
+    }
+
+    for (let i = 0; i < 12; i += 1) {
+      const zone = i < 6 ? 'left' : 'right';
+      const edgeX = zone === 'left' ? margin + cell * (1.4 + rnd() * 4) : w - margin - cell * (1.4 + rnd() * 4);
+      const edgeY = margin + cell * (2 + rnd() * (rows - 4));
+      const icon = iconSet[Math.floor(rnd() * iconSet.length)];
+      drawAsciiText(icon, edgeX, edgeY, cell * (0.72 + rnd() * 0.18), alpha * (0.28 + rnd() * 0.45), zone === 'left' ? 'left' : 'right');
+    }
+  }
+
+  function drawCenterComposition(w, h, alpha, textScale, pool) {
+    const centerX = w * 0.5;
+    const centerY = h * 0.52;
+
+    const primary = (pool[0] || 'DELTA').toUpperCase();
+    const secondary = (pool[1] || 'NULL SIGNAL').toUpperCase();
+    const tertiary = (pool[2] || 'BECOME THE EXIT').toUpperCase();
+
+    drawAsciiText('[::]', centerX, centerY - h * 0.16, w * 0.024 * textScale, alpha * 0.55, 'center');
+    drawAsciiText('<+>', centerX - w * 0.11, centerY - h * 0.14, w * 0.018 * textScale, alpha * 0.3, 'center');
+    drawAsciiText('<+>', centerX + w * 0.11, centerY - h * 0.14, w * 0.018 * textScale, alpha * 0.3, 'center');
+
+    drawAsciiText(primary, centerX, centerY - h * 0.01, w * 0.085 * textScale, alpha * 0.97, 'center');
+    drawAsciiText(secondary, centerX, centerY + h * 0.07, w * 0.032 * textScale, alpha * 0.82, 'center');
+    drawAsciiText(tertiary, centerX, centerY + h * 0.125, w * 0.022 * textScale, alpha * 0.75, 'center');
+
+    const bracketHalf = w * 0.18;
+    const bracketY1 = centerY - h * 0.065;
+    const bracketY2 = centerY + h * 0.095;
+    drawAsciiText(`┌${repeatedCharLine('─', 12)}┐`, centerX - bracketHalf, bracketY1, w * 0.015 * textScale, alpha * 0.38, 'center');
+    drawAsciiText(`└${repeatedCharLine('─', 12)}┘`, centerX + bracketHalf, bracketY2, w * 0.015 * textScale, alpha * 0.38, 'center');
+
+    for (let i = 0; i < 8; i += 1) {
+      const offsetY = (-0.19 + i * 0.055) * h;
+      const leftX = centerX - w * (0.29 + rnd() * 0.08);
+      const rightX = centerX + w * (0.29 + rnd() * 0.08);
+      const label = `${systemWords[Math.floor(rnd() * systemWords.length)]} // ${Math.floor(rnd() * 9999).toString().padStart(4, '0')}`;
+      drawAsciiText(label, leftX, centerY + offsetY, w * 0.012 * textScale, alpha * (0.18 + rnd() * 0.22), 'center');
+      drawAsciiText(label, rightX, centerY + offsetY, w * 0.012 * textScale, alpha * (0.18 + rnd() * 0.22), 'center');
+    }
+
+    const chunkCount = 18;
+    for (let i = 0; i < chunkCount; i += 1) {
+      const ring = i % 2 === 0 ? 0.24 : 0.33;
+      const side = i % 4;
+      let x = centerX;
+      let y = centerY;
+      if (side === 0) { x -= w * ring; y += (rnd() - 0.5) * h * 0.28; }
+      if (side === 1) { x += w * ring; y += (rnd() - 0.5) * h * 0.28; }
+      if (side === 2) { x += (rnd() - 0.5) * w * 0.28; y -= h * ring * 0.75; }
+      if (side === 3) { x += (rnd() - 0.5) * w * 0.28; y += h * ring * 0.68; }
+      const chunk = asciiChunks[Math.floor(rnd() * asciiChunks.length)];
+      drawAsciiText(chunk, x, y, w * (0.012 + rnd() * 0.01) * textScale, alpha * (0.16 + rnd() * 0.26), 'center');
+    }
   }
 
   function drawOverlay() {
@@ -123,58 +259,26 @@
     const textScale = Number($('textSizeInput').value) / 100;
     const words = $('wordsInput').value.split(',').map((s) => s.trim()).filter(Boolean);
     const pool = words.length ? words : systemWords;
+    const color = $('asciiInput').value;
 
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
-    ctx.fillStyle = $('asciiInput').value;
-    ctx.strokeStyle = $('asciiInput').value;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
     ctx.lineWidth = Math.max(1, w * 0.0015);
-    ctx.shadowColor = $('asciiInput').value;
-    ctx.shadowBlur = 7;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
 
-    for (let i = 0; i < 48; i += 1) {
-      const size = Math.floor((10 + rnd() * 32) * textScale);
-      const x = rnd() * w;
-      const y = rnd() * h;
-      const chunk = asciiChunks[Math.floor(rnd() * asciiChunks.length)];
-      ctx.font = `${size}px ui-monospace, Menlo, Consolas, monospace`;
-      ctx.globalAlpha = alpha * (0.18 + rnd() * 0.62);
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate((rnd() - 0.5) * 0.38);
-      ctx.fillText(chunk.repeat(1 + Math.floor(rnd() * 3)), 0, 0);
-      ctx.restore();
-    }
+    drawAsciiFrame(w, h, alpha, textScale);
+    drawCenterComposition(w, h, alpha, textScale, pool);
 
-    ctx.globalAlpha = alpha;
-    pool.slice(0, 5).forEach((word, i) => {
-      const size = Math.floor(w * (i === 0 ? 0.078 : 0.048) * textScale);
-      ctx.font = `900 ${size}px ui-monospace, Menlo, Consolas, monospace`;
-      const x = w * (0.055 + rnd() * 0.18);
-      const y = h * (0.19 + i * 0.14 + rnd() * 0.04);
-      const text = word.toUpperCase();
-      ctx.fillText(text, x + 3, y);
-      ctx.globalAlpha = alpha * 0.35;
-      ctx.fillText(text, x - 6, y + 5);
-      ctx.globalAlpha = alpha;
-    });
-
-    ctx.shadowBlur = 0;
-    ctx.globalAlpha = alpha * 0.65;
-    ctx.strokeRect(w * 0.035, h * 0.035, w * 0.93, h * 0.93);
-
-    ctx.beginPath();
-    for (let y = h * 0.08; y < h * 0.94; y += h * 0.075) {
-      ctx.moveTo(w * 0.035, y);
-      ctx.lineTo(w * 0.965, y + (rnd() - 0.5) * 18);
-    }
-    ctx.stroke();
-
-    ctx.globalAlpha = alpha * 0.86;
-    ctx.font = `${Math.floor(w * 0.017 * textScale)}px ui-monospace, Menlo, Consolas, monospace`;
-    for (let i = 0; i < 14; i += 1) {
-      const label = `${systemWords[Math.floor(rnd() * systemWords.length)]} // ${Math.floor(rnd() * 9999).toString().padStart(4, '0')}`;
-      ctx.fillText(label, w * 0.055, h * (0.055 + i * 0.033));
+    const microCount = Math.max(12, Math.floor((w + h) / 180));
+    for (let i = 0; i < microCount; i += 1) {
+      const onTop = i % 2 === 0;
+      const x = onTop ? w * (0.1 + rnd() * 0.8) : (i % 4 < 2 ? w * 0.085 : w * 0.915);
+      const y = onTop ? (i % 4 < 2 ? h * 0.1 : h * 0.9) : h * (0.16 + rnd() * 0.68);
+      const bit = asciiBits[Math.floor(rnd() * asciiBits.length)].repeat(1 + Math.floor(rnd() * 4));
+      drawAsciiText(bit, x, y, w * 0.009 * textScale, alpha * (0.08 + rnd() * 0.15), 'center');
     }
 
     ctx.restore();
@@ -199,7 +303,10 @@
   }
 
   $('imageInput').addEventListener('change', (event) => loadFile(event.target.files[0]));
-  $('randomBtn').addEventListener('click', () => { seed = Math.floor(Math.random() * 0xffffffff); render(); });
+  $('randomBtn').addEventListener('click', () => {
+    seed = Math.floor(Math.random() * 0xffffffff);
+    render();
+  });
   $('renderBtn').addEventListener('click', render);
   $('downloadBtn').addEventListener('click', () => {
     const a = document.createElement('a');
@@ -219,8 +326,10 @@
   }));
   dropzone.addEventListener('drop', (event) => loadFile(event.dataTransfer.files[0]));
 
-  ['wordsInput', 'widthInput', 'heightInput', 'scaleInput', 'thresholdInput', 'darkInput', 'hotInput', 'asciiInput', 'grainInput', 'overlayInput', 'textSizeInput']
-    .forEach((id) => $(id).addEventListener('input', render));
+  [
+    'wordsInput', 'widthInput', 'heightInput', 'scaleInput', 'thresholdInput', 'vignetteInput',
+    'darkInput', 'hotInput', 'asciiInput', 'grainInput', 'overlayInput', 'textSizeInput'
+  ].forEach((id) => $(id).addEventListener('input', render));
 
   render();
 })();

@@ -1,21 +1,29 @@
-# DITHER//ASCII Poster Tool
+# Dither ASCII Poster Tool
 
-Static GitHub Pages-ready web app. No build step, no dependencies.
+Static HTML/CSS/JS tool for GitHub Pages.
 
-## Deploy to GitHub Pages
+## Features
+- Upload image
+- Convert image to 2-color mono dither
+- Adjustable vignette before dithering
+- Green ASCII overlay with center-focused composition
+- Regenerating ASCII frame / grid / edge glyphs
+- Custom words via comma-separated input
+- Export final PNG
 
-1. Create a new GitHub repository, for example `dither-ascii-pages`.
-2. Upload these files to the repository root, not inside a nested folder:
+## GitHub Pages deploy
+1. Create a GitHub repository.
+2. Upload these files to the root of the repo:
    - `index.html`
    - `style.css`
    - `app.js`
-   - `README.md` optional
-3. Open repository **Settings → Pages**.
-4. In **Build and deployment**, choose **Deploy from a branch**.
-5. Select branch `main` and folder `/ (root)`, then save.
-6. Your site URL will look like:
-   `https://YOUR_USERNAME.github.io/dither-ascii-pages/`
+   - `README.md`
+3. Open **Settings → Pages**.
+4. Set:
+   - **Source:** Deploy from a branch
+   - **Branch:** `main`
+   - **Folder:** `/ (root)`
+5. Save and wait for the site URL.
 
-## Update later
-
-Replace the files in the repository root and commit changes. GitHub Pages will redeploy from the selected branch.
+## Update workflow
+To update the app later, replace the files in the repo and commit again. GitHub Pages will redeploy automatically.
