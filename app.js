@@ -120,7 +120,9 @@
         const di = (y * sw + x) * 4;
         let l = data[di] * 0.299 + data[di + 1] * 0.587 + data[di + 2] * 0.114;
         l = (l - 128) * cFactor + 128;
-        l -= settings.threshold;
+        // Threshold is intentionally applied as a strong luminance bias before error diffusion.
+        // This makes Floyd–Steinberg visibly change the hot/dark ratio instead of mostly preserving average brightness.
+        l -= settings.threshold * 2.0;
         if (settings.vignette > 0) {
           const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2) / maxDist;
           l *= 1 - smoothstep(0.38, 1, dist) * (settings.vignette / 100) * 0.96;

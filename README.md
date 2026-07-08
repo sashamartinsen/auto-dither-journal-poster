@@ -18,3 +18,7 @@ Static HTML/CSS/JS tool for GitHub Pages.
 - Image scale defaults to 100 for both layers.
 - Image scale, Offset X, and Offset Y are compacted into one row.
 - Threshold is now applied as a luminance bias before dithering, so Floyd–Steinberg responds visibly.
+
+## v12 changes
+- Stronger Floyd–Steinberg threshold response.
+- Offset X/Y compacted into a single row per image layer.
