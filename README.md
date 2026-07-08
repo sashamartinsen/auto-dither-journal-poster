@@ -2,30 +2,9 @@
 
 Static HTML/CSS/JS tool for GitHub Pages.
 
-## Features
-- Upload image
-- Convert image to 2-color mono dither
-- Choose dithering algorithm: Floyd–Steinberg or Bayer 4×4
-- Adjustable vignette before dithering
-- Separate colors for words and for ASCII glyph graphics
-- Console-like system monospace overlay font (no external font dependency)
-- Regenerating experimental ASCII composition with randomized boxes, labels, and glyph clusters
-- Custom words via comma-separated input
-- Export final PNG
-
-## GitHub Pages deploy
-1. Create a GitHub repository.
-2. Upload these files to the root of the repo:
-   - `index.html`
-   - `style.css`
-   - `app.js`
-   - `README.md`
-3. Open **Settings → Pages**.
-4. Set:
-   - **Source:** Deploy from a branch
-   - **Branch:** `main`
-   - **Folder:** `/ (root)`
-5. Save and wait for the site URL.
-
-## Update workflow
-To update the app later, replace the files in the repo and commit again. GitHub Pages will redeploy automatically.
+## Changes in v6
+- Overlay uses normal `source-over` rendering.
+- Overlay at 100 is fully opaque, without additive/screen mode and without glow.
+- Dither scale minimum is now 3.
+- Added image contrast before dithering.
+- Removed boxed ASCII frames; current overlay is only words, small pictograms, horizontal and vertical ruler lines.
