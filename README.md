@@ -3,8 +3,10 @@
 Static HTML/CSS/JS tool for GitHub Pages.
 
 ## Features
+- Collapsible control blocks
 - Base image dither layer with full controls
 - Optional second image dither layer with its own controls
+- Per-layer image positioning: image scale, offset X, and offset Y
 - Second layer composites in normal mode with transparent dark pixels and visible hot-color pixels
 - Floyd–Steinberg or Bayer 4×4 dithering
 - Contrast, threshold, vignette, grain, and scale controls per layer

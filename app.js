@@ -30,7 +30,7 @@
   }
 
   function updateOutputs() {
-    ['scale','threshold','contrast','vignette','grain','scale2','threshold2','contrast2','vignette2','grain2','textSize','density','overlay']
+    ['scale','threshold','contrast','vignette','grain','imageScale','offsetX','offsetY','scale2','threshold2','contrast2','vignette2','grain2','imageScale2','offsetX2','offsetY2','textSize','density','overlay']
       .forEach((name) => {
         const input = $(name + 'Input');
         const out = $(name + 'Out');
@@ -67,14 +67,18 @@
   }
 
   function getLayerSettings(suffix = '') {
-    const id = (base) => $(base + suffix + 'Input');
+    const valueOf = (base, fallback = 0) => Number($(base + suffix + 'Input')?.value ?? fallback);
+    const elOf = (base) => $(base + suffix + 'Input');
     return {
-      algorithm: id('algorithm').value,
-      scale: clamp(Number(id('scale').value) || 3, 3, 12),
-      threshold: Number(id('threshold').value) || 0,
-      contrast: Number(id('contrast').value) || 0,
-      vignette: Number(id('vignette').value) || 0,
-      grain: Number(id('grain').value) || 0,
+      algorithm: elOf('algorithm').value,
+      scale: clamp(valueOf('scale', 3), 3, 12),
+      threshold: valueOf('threshold', 0),
+      contrast: valueOf('contrast', 0),
+      vignette: valueOf('vignette', 0),
+      grain: valueOf('grain', 0),
+      imageScale: valueOf('imageScale', 100) / 100,
+      offsetX: valueOf('offsetX', 0),
+      offsetY: valueOf('offsetY', 0),
       dark: suffix ? [0, 0, 0] : hexToRgb($('darkInput').value),
       hot: hexToRgb((suffix ? $('hot2Input') : $('hotInput')).value)
     };
@@ -90,9 +94,14 @@
 
     sctx.fillStyle = '#000';
     sctx.fillRect(0, 0, sw, sh);
+
     if (imgSource) {
       const [x, y, iw, ih] = fitCover(imgSource, sw, sh);
-      sctx.drawImage(imgSource, x, y, iw, ih);
+      const scaledW = iw * settings.imageScale;
+      const scaledH = ih * settings.imageScale;
+      const drawX = x - (scaledW - iw) / 2 + (settings.offsetX / 100) * sw;
+      const drawY = y - (scaledH - ih) / 2 + (settings.offsetY / 100) * sh;
+      sctx.drawImage(imgSource, drawX, drawY, scaledW, scaledH);
     } else if (placeholderText) {
       const grad = sctx.createLinearGradient(0, 0, sw, sh);
       grad.addColorStop(0, '#090909'); grad.addColorStop(0.45, '#aaa'); grad.addColorStop(1, '#030303');
@@ -151,7 +160,7 @@
     ctx.drawImage(baseCanvas, 0, 0, w, h);
 
     if ($('enableSecondLayerInput').checked && sourceImage2) {
-      const overlayCanvas = buildDitherCanvas(sourceImage2, getLayerSettings('2'), w, h, 'SECOND IMAGE', true);
+      const overlayCanvas = buildDitherCanvas(sourceImage2, getLayerSettings('2'), w, h, '', true);
       ctx.drawImage(overlayCanvas, 0, 0, w, h);
     }
   }
@@ -213,7 +222,7 @@
 
   function updateSecondLayerUI() {
     const enabled = $('enableSecondLayerInput').checked;
-    const ids = ['imageInput2','algorithm2Input','scale2Input','threshold2Input','contrast2Input','vignette2Input','grain2Input','hot2Input'];
+    const ids = ['imageInput2','algorithm2Input','scale2Input','threshold2Input','contrast2Input','vignette2Input','grain2Input','imageScale2Input','offsetX2Input','offsetY2Input','hot2Input'];
     ids.forEach((id) => {
       const el = $(id);
       if (el) el.disabled = !enabled;
@@ -266,8 +275,8 @@
   dropzone.addEventListener('drop', (event) => loadFile(event.dataTransfer.files[0], 1));
 
   [
-    'widthInput','heightInput','algorithmInput','scaleInput','thresholdInput','contrastInput','vignetteInput','grainInput','darkInput','hotInput',
-    'enableSecondLayerInput','algorithm2Input','scale2Input','threshold2Input','contrast2Input','vignette2Input','grain2Input','hot2Input',
+    'widthInput','heightInput','algorithmInput','scaleInput','thresholdInput','contrastInput','vignetteInput','grainInput','imageScaleInput','offsetXInput','offsetYInput','darkInput','hotInput',
+    'enableSecondLayerInput','algorithm2Input','scale2Input','threshold2Input','contrast2Input','vignette2Input','grain2Input','imageScale2Input','offsetX2Input','offsetY2Input','hot2Input',
     'wordsInput','blendModeInput','fontInput','textSizeInput','densityInput','overlayInput','wordColorInput','glyphColorInput'
   ].forEach((id) => { const el = $(id); el.addEventListener('input', render); el.addEventListener('change', render); });
 
