@@ -12,7 +12,7 @@
     <aside class="panel controls">
       <header class="brand">
         <div class="brand__title">DITHER//ASCII</div>
-        <div class="brand__subtitle">photo → mono dither → cyber ASCII poster</div>
+        <div class="brand__subtitle">photo → dither → ASCII overlay</div>
       </header>
 
       <label class="dropzone" for="imageInput" id="dropzone">
@@ -21,90 +21,49 @@
         <small>Everything runs locally in browser</small>
       </label>
 
-      <label class="field">
-        WORDS / comma separated
-        <input id="wordsInput" type="text" value="DELTA, NULL SIGNAL, BECOME THE EXIT" placeholder="DELTA, NULL SIGNAL, EXIT" />
-      </label>
+      <section class="control-block">
+        <h2>Image / Dither</h2>
+        <div class="two">
+          <label class="field">Width<input id="widthInput" type="number" value="1200" min="320" max="2600" step="10" /></label>
+          <label class="field">Height<input id="heightInput" type="number" value="1500" min="320" max="2600" step="10" /></label>
+        </div>
+        <div class="two">
+          <label class="field">Algorithm<select id="algorithmInput"><option value="fs" selected>Floyd–Steinberg</option><option value="bayer">Bayer 4×4</option></select></label>
+          <label class="field">Dither scale <output id="scaleOut">3</output><input id="scaleInput" type="range" min="3" max="12" value="3" /></label>
+        </div>
+        <div class="two">
+          <label class="field">Threshold <output id="thresholdOut">0</output><input id="thresholdInput" type="range" min="-90" max="90" value="0" /></label>
+          <label class="field">Contrast <output id="contrastOut">0</output><input id="contrastInput" type="range" min="-100" max="100" value="0" /></label>
+        </div>
+        <div class="two">
+          <label class="field">Vignette <output id="vignetteOut">28</output><input id="vignetteInput" type="range" min="0" max="100" value="28" /></label>
+          <label class="field">Grain <output id="grainOut">24</output><input id="grainInput" type="range" min="0" max="90" value="24" /></label>
+        </div>
+        <div class="two">
+          <label class="field">Dark<input id="darkInput" type="color" value="#080204" /></label>
+          <label class="field">Hot<input id="hotInput" type="color" value="#004bff" /></label>
+        </div>
+      </section>
 
-      <div class="two">
-        <label class="field">
-          Width
-          <input id="widthInput" type="number" value="1200" min="320" max="2600" step="10" />
-        </label>
-        <label class="field">
-          Height
-          <input id="heightInput" type="number" value="1500" min="320" max="2600" step="10" />
-        </label>
-      </div>
-
-      <div class="two">
-        <label class="field">
-          Dither algorithm
-          <select id="algorithmInput">
-            <option value="fs" selected>Floyd–Steinberg</option>
-            <option value="bayer">Bayer 4×4</option>
-          </select>
-        </label>
-        <label class="field">
-          Dither scale <output id="scaleOut">3</output>
-          <input id="scaleInput" type="range" min="3" max="12" value="3" />
-        </label>
-      </div>
-
-      <div class="two">
-        <label class="field">
-          Threshold <output id="thresholdOut">0</output>
-          <input id="thresholdInput" type="range" min="-90" max="90" value="0" />
-        </label>
-        <label class="field">
-          Contrast <output id="contrastOut">0</output>
-          <input id="contrastInput" type="range" min="-100" max="100" value="0" />
-        </label>
-      </div>
-
-      <div class="two">
-        <label class="field">
-          Vignette <output id="vignetteOut">28</output>
-          <input id="vignetteInput" type="range" min="0" max="100" value="28" />
-        </label>
-        <label class="field">
-          Grain <output id="grainOut">24</output>
-          <input id="grainInput" type="range" min="0" max="90" value="24" />
-        </label>
-        <label class="field">
-          Overlay <output id="overlayOut">100</output>
-          <input id="overlayInput" type="range" min="0" max="100" value="100" />
-        </label>
-      </div>
-
-      <div class="two">
-        <label class="field">
-          Dark
-          <input id="darkInput" type="color" value="#080204" />
-        </label>
-        <label class="field">
-          Hot
-          <input id="hotInput" type="color" value="#d31828" />
-        </label>
-      </div>
-
-      <div class="two">
-        <label class="field">
-          Glyph color
-          <input id="glyphColorInput" type="color" value="#29ff7a" />
-        </label>
-        <label class="field">
-          Word color
-          <input id="wordColorInput" type="color" value="#d8ffd8" />
-        </label>
-      </div>
-
-      <div class="one">
-        <label class="field">
-          Overlay size <output id="textSizeOut">100</output>
-          <input id="textSizeInput" type="range" min="60" max="160" value="100" />
-        </label>
-      </div>
+      <section class="control-block">
+        <h2>ASCII Graphics</h2>
+        <label class="field">Words / comma separated<input id="wordsInput" type="text" value="DELTA, NULL SIGNAL, BECOME THE EXIT" placeholder="DELTA, NULL SIGNAL, EXIT" /></label>
+        <div class="two">
+          <label class="field">Blend mode<select id="blendModeInput"><option value="source-over" selected>Normal</option><option value="multiply">Multiply</option><option value="lighter">Add</option></select></label>
+          <label class="field">Font<select id="fontInput"><option value="consolas" selected>Consolas</option><option value="cascadia">Cascadia Mono</option><option value="courier">Courier New</option><option value="monospace">System Monospace</option></select></label>
+        </div>
+        <div class="two">
+          <label class="field">Size <output id="textSizeOut">100</output><input id="textSizeInput" type="range" min="60" max="180" value="100" /></label>
+          <label class="field">Density <output id="densityOut">70</output><input id="densityInput" type="range" min="0" max="100" value="70" /></label>
+        </div>
+        <div class="two">
+          <label class="field">Opacity <output id="overlayOut">100</output><input id="overlayInput" type="range" min="0" max="100" value="100" /></label>
+          <label class="field">Word color<input id="wordColorInput" type="color" value="#d8ffd8" /></label>
+        </div>
+        <div class="one">
+          <label class="field">Glyph color<input id="glyphColorInput" type="color" value="#29ff7a" /></label>
+        </div>
+      </section>
 
       <div class="buttons">
         <button id="randomBtn" type="button">REROLL ASCII</button>

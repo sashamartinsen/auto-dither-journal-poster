@@ -1,10 +1,11 @@
 # Dither ASCII Poster Tool
 
-Static HTML/CSS/JS tool for GitHub Pages.
+Static GitHub Pages-ready HTML/CSS/JS app.
 
-## Changes in v6
-- Overlay uses normal `source-over` rendering.
-- Overlay at 100 is fully opaque, without additive/screen mode and without glow.
-- Dither scale minimum is now 3.
-- Added image contrast before dithering.
-- Removed boxed ASCII frames; current overlay is only words, small pictograms, horizontal and vertical ruler lines.
+## v7
+- UI split into Image / Dither and ASCII Graphics blocks.
+- Dither scale minimum is 3.
+- Contrast is applied directly to luminance before dithering.
+- ASCII overlay has selectable blend mode: Normal, Multiply, Add.
+- Overlay opacity at 100 uses `globalAlpha = 1` with no internal transparency multipliers.
+- Added font, size, and density controls for ASCII graphics.
