@@ -107,8 +107,7 @@
             <label class="field">Blend mode<select id="blendModeInput"><option value="source-over" selected>Normal</option><option value="multiply">Multiply</option><option value="lighter">Add</option></select></label>
             <label class="field">Font<select id="fontInput"><option value="consolas" selected>Consolas</option><option value="cascadia">Cascadia Mono</option><option value="courier">Courier New</option><option value="monospace">System Monospace</option></select></label>
           </div>
-          <div class="two">
-            <label class="field">Size <output id="textSizeOut">100</output><input id="textSizeInput" type="range" min="60" max="180" value="100" /></label>
+          <div class="one">
             <label class="field">Opacity <output id="overlayOut">100</output><input id="overlayInput" type="range" min="0" max="100" value="100" /></label>
           </div>
 
@@ -117,6 +116,10 @@
             <div class="block-body">
               <label class="toggle-line"><input id="enableWordsLayerInput" type="checkbox" checked /> Enable words</label>
               <label class="field">Words / comma separated<input id="wordsInput" type="text" value="DELTA, NULL SIGNAL, BECOME THE EXIT" placeholder="DELTA, NULL SIGNAL, EXIT" /></label>
+              <div class="two">
+                <label class="field">Word size <output id="wordSizeOut">100</output><input id="wordSizeInput" type="range" min="50" max="220" value="100" /></label>
+                <label class="field">Word rows <output id="wordRowsOut">4</output><input id="wordRowsInput" type="range" min="1" max="10" value="4" /></label>
+              </div>
               <div class="one">
                 <label class="field">Word color<input id="wordColorInput" type="color" value="#d8ffd8" /></label>
               </div>
@@ -127,8 +130,11 @@
             <summary>Glyph particles layer</summary>
             <div class="block-body">
               <label class="toggle-line"><input id="enableGlyphLayerInput" type="checkbox" checked /> Enable glyph particles</label>
-              <div class="three">
+              <div class="two">
                 <label class="field">Density <output id="densityOut">70</output><input id="densityInput" type="range" min="0" max="100" value="70" /></label>
+                <label class="field">Glyph size <output id="glyphSizeOut">100</output><input id="glyphSizeInput" type="range" min="40" max="220" value="100" /></label>
+              </div>
+              <div class="two">
                 <label class="field">Cols <output id="glyphColsOut">7</output><input id="glyphColsInput" type="range" min="3" max="12" value="7" /></label>
                 <label class="field">Rows <output id="glyphRowsOut">7</output><input id="glyphRowsInput" type="range" min="3" max="12" value="7" /></label>
               </div>

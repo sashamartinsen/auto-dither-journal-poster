@@ -48,7 +48,7 @@
   }
 
   function updateOutputs() {
-    ['scale','threshold','contrast','vignette','grain','imageScale','offsetX','offsetY','scale2','threshold2','contrast2','vignette2','grain2','imageScale2','offsetX2','offsetY2','textSize','density','overlay','glyphCols','glyphRows','gridCols','gridRows','gridSize']
+    ['scale','threshold','contrast','vignette','grain','imageScale','offsetX','offsetY','scale2','threshold2','contrast2','vignette2','grain2','imageScale2','offsetX2','offsetY2','density','overlay','wordSize','wordRows','glyphSize','glyphCols','glyphRows','gridCols','gridRows','gridSize']
       .forEach((name) => {
         const input = $(name + 'Input');
         const out = $(name + 'Out');
@@ -227,6 +227,22 @@
     return positions;
   }
 
+  function getGridAnchors(w, h, cols, rows, marginRatio = 0.07) {
+    const marginX = w * marginRatio;
+    const marginY = h * marginRatio;
+    const usableW = Math.max(1, w - marginX * 2);
+    const usableH = Math.max(1, h - marginY * 2);
+    const cellW = usableW / cols;
+    const cellH = usableH / rows;
+    const anchors = [];
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        anchors.push({ x: marginX + col * cellW, y: marginY + row * cellH, col, row, cellW, cellH });
+      }
+    }
+    return anchors;
+  }
+
   function glyphParticleString() {
     const r = rnd();
     if (r < 0.24) return icons[Math.floor(rnd() * icons.length)];
@@ -256,21 +272,22 @@
   function drawGlyphParticlesGrid(w, h, cell, glyphColor, density) {
     const cols = Math.max(3, Number($('glyphColsInput').value) || 7);
     const rows = Math.max(3, Number($('glyphRowsInput').value) || 7);
-    const positions = getGridPositions(w, h, cols, rows, 0.09);
-    for (let i = positions.length - 1; i > 0; i -= 1) {
+    const glyphScale = (Number($('glyphSizeInput').value) || 100) / 100;
+    const anchors = getGridAnchors(w, h, cols, rows, 0.09);
+    for (let i = anchors.length - 1; i > 0; i -= 1) {
       const j = Math.floor(rnd() * (i + 1));
-      [positions[i], positions[j]] = [positions[j], positions[i]];
+      [anchors[i], anchors[j]] = [anchors[j], anchors[i]];
     }
-    const count = Math.max(0, Math.round(positions.length * density));
+    const count = Math.max(0, Math.round(anchors.length * density));
     for (let i = 0; i < count; i += 1) {
-      const pos = positions[i];
-      const stepX = cols > 1 ? (w * 0.82) / (cols - 1) : w * 0.1;
-      const stepY = rows > 1 ? (h * 0.82) / (rows - 1) : h * 0.1;
-      const jitterX = (rnd() - 0.5) * stepX * 0.24;
-      const jitterY = (rnd() - 0.5) * stepY * 0.24;
+      const pos = anchors[i];
+      const padX = pos.cellW * 0.08;
+      const padY = pos.cellH * 0.12;
+      const jitterX = rnd() * pos.cellW * 0.16;
+      const jitterY = rnd() * pos.cellH * 0.12;
       const txt = glyphParticleString();
-      const size = cell * (0.62 + rnd() * 0.55);
-      drawText(txt, pos.x + jitterX, pos.y + jitterY, size, glyphColor, 'center', 500);
+      const size = cell * glyphScale * (0.62 + rnd() * 0.55);
+      drawText(txt, pos.x + padX + jitterX, pos.y + padY + jitterY + size, size, glyphColor, 'left', 500);
     }
   }
 
@@ -278,10 +295,21 @@
     const baseWords = shuffledWords(words);
     const extraCount = Math.floor(density * Math.max(2, words.length * 1.4));
     const totalCount = Math.max(words.length, baseWords.length + extraCount);
+    const rows = Math.max(1, Number($('wordRowsInput').value) || 4);
+    const cols = Math.max(1, Math.ceil(totalCount / rows));
+    const wordScale = (Number($('wordSizeInput').value) || 100) / 100;
+    const anchors = getGridAnchors(w, h, cols, rows, 0.08);
+    for (let i = anchors.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rnd() * (i + 1));
+      [anchors[i], anchors[j]] = [anchors[j], anchors[i]];
+    }
     for (let i = 0; i < totalCount; i += 1) {
       const word = i < baseWords.length ? baseWords[i] : words[Math.floor(rnd() * words.length)].toUpperCase();
-      const sizeJitter = 0.78 + rnd() * 0.72;
-      drawText(word, w * (0.08 + rnd() * 0.84), h * (0.1 + rnd() * 0.8), cell * sizeJitter, wordColor, 'center', 700);
+      const pos = anchors[i % anchors.length];
+      const size = cell * wordScale * (0.78 + rnd() * 0.72);
+      const padX = pos.cellW * 0.05;
+      const padY = pos.cellH * 0.12;
+      drawText(word, pos.x + padX, pos.y + padY + size, size, wordColor, 'left', 700);
     }
   }
 
@@ -295,11 +323,10 @@
     const w = canvas.width, h = canvas.height;
     const opacity = Number($('overlayInput').value) / 100;
     const density = Number($('densityInput').value) / 100;
-    const textScale = Number($('textSizeInput').value) / 100;
     const glyphColor = $('glyphColorInput').value;
     const wordColor = $('wordColorInput').value;
     const words = poolWords();
-    const cell = Math.max(12, Math.min(w, h) * 0.016 * textScale);
+    const cell = Math.max(12, Math.min(w, h) * 0.016);
 
     ctx.save();
     ctx.globalCompositeOperation = $('blendModeInput').value;
@@ -351,9 +378,9 @@
   [
     'widthInput','heightInput','algorithmInput','scaleInput','thresholdInput','contrastInput','vignetteInput','grainInput','imageScaleInput','offsetXInput','offsetYInput','darkInput','hotInput',
     'enableSecondLayerInput','algorithm2Input','scale2Input','threshold2Input','contrast2Input','vignette2Input','grain2Input','imageScale2Input','offsetX2Input','offsetY2Input','hot2Input',
-    'blendModeInput','fontInput','textSizeInput','overlayInput',
-    'enableWordsLayerInput','wordsInput','wordColorInput',
-    'enableGlyphLayerInput','densityInput','glyphColsInput','glyphRowsInput','glyphColorInput',
+    'blendModeInput','fontInput','overlayInput',
+    'enableWordsLayerInput','wordsInput','wordSizeInput','wordRowsInput','wordColorInput',
+    'enableGlyphLayerInput','densityInput','glyphSizeInput','glyphColsInput','glyphRowsInput','glyphColorInput',
     'enableSymbolGridInput','gridColsInput','gridRowsInput','gridSizeInput','gridSymbolInput'
   ].forEach((id) => { const el = $(id); if (el) { el.addEventListener('input', render); el.addEventListener('change', render); } });
 
