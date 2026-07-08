@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>DITHER//ASCII POSTER TOOL</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <aside class="panel controls">
+      <header class="brand">
+        <div class="brand__title">DITHER//ASCII</div>
+        <div class="brand__subtitle">photo → mono dither → cyber ASCII poster</div>
+      </header>
+
+      <label class="dropzone" for="imageInput" id="dropzone">
+        <input id="imageInput" type="file" accept="image/*" />
+        <span>DROP / SELECT IMAGE</span>
+        <small>Everything runs locally in browser</small>
+      </label>
+
+      <label class="field">
+        WORDS / comma separated
+        <input id="wordsInput" type="text" value="DELTA, NULL SIGNAL, BECOME THE EXIT" placeholder="DELTA, NULL SIGNAL, EXIT" />
+      </label>
+
+      <div class="two">
+        <label class="field">
+          Width
+          <input id="widthInput" type="number" value="1200" min="320" max="2600" step="10" />
+        </label>
+        <label class="field">
+          Height
+          <input id="heightInput" type="number" value="1500" min="320" max="2600" step="10" />
+        </label>
+      </div>
+
+      <div class="two">
+        <label class="field">
+          Dither scale <output id="scaleOut">3</output>
+          <input id="scaleInput" type="range" min="1" max="10" value="3" />
+        </label>
+        <label class="field">
+          Threshold <output id="thresholdOut">0</output>
+          <input id="thresholdInput" type="range" min="-90" max="90" value="0" />
+        </label>
+      </div>
+
+      <div class="two">
+        <label class="field">
+          Dark
+          <input id="darkInput" type="color" value="#080204" />
+        </label>
+        <label class="field">
+          Hot
+          <input id="hotInput" type="color" value="#d31828" />
+        </label>
+      </div>
+
+      <div class="two">
+        <label class="field">
+          ASCII
+          <input id="asciiInput" type="color" value="#29ff7a" />
+        </label>
+        <label class="field">
+          Grain <output id="grainOut">24</output>
+          <input id="grainInput" type="range" min="0" max="90" value="24" />
+        </label>
+      </div>
+
+      <div class="two">
+        <label class="field">
+          Overlay <output id="overlayOut">70</output>
+          <input id="overlayInput" type="range" min="0" max="100" value="70" />
+        </label>
+        <label class="field">
+          Text size <output id="textSizeOut">100</output>
+          <input id="textSizeInput" type="range" min="60" max="160" value="100" />
+        </label>
+      </div>
+
+      <div class="buttons">
+        <button id="randomBtn" type="button">REROLL ASCII</button>
+        <button id="renderBtn" type="button">RENDER</button>
+        <button id="downloadBtn" type="button">EXPORT PNG</button>
+      </div>
+    </aside>
+
+    <section class="panel stage">
+      <canvas id="canvas" width="1200" height="1500"></canvas>
+      <p class="caption">GitHub Pages compatible: static HTML/CSS/JS, no build step.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
