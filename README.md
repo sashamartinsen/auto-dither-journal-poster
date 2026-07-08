@@ -12,3 +12,9 @@ Static HTML/CSS/JS tool for GitHub Pages.
 - Contrast, threshold, vignette, grain, and scale controls per layer
 - ASCII graphics block with blend mode, font, size, density, and opacity
 - Export final PNG
+
+
+## v11 changes
+- Image scale defaults to 100 for both layers.
+- Image scale, Offset X, and Offset Y are compacted into one row.
+- Threshold is now applied as a luminance bias before dithering, so Floyd–Steinberg responds visibly.

@@ -38,12 +38,12 @@
       });
   }
 
-  function floydSteinberg(lum, sw, sh, threshold) {
+  function floydSteinberg(lum, sw, sh) {
     for (let y = 0; y < sh; y += 1) {
       for (let x = 0; x < sw; x += 1) {
         const i = y * sw + x;
         const old = lum[i];
-        const next = old > 128 + threshold ? 255 : 0;
+        const next = old > 128 ? 255 : 0;
         const err = old - next;
         lum[i] = next;
         if (x + 1 < sw) lum[i + 1] += err * 7 / 16;
@@ -56,12 +56,12 @@
     }
   }
 
-  function bayerDither(lum, sw, sh, threshold) {
+  function bayerDither(lum, sw, sh) {
     for (let y = 0; y < sh; y += 1) {
       for (let x = 0; x < sw; x += 1) {
         const i = y * sw + x;
         const b = ((bayer4[y % 4][x % 4] + 0.5) / 16 - 0.5) * 110;
-        lum[i] = lum[i] > 128 + threshold + b ? 255 : 0;
+        lum[i] = lum[i] > 128 + b ? 255 : 0;
       }
     }
   }
@@ -120,6 +120,7 @@
         const di = (y * sw + x) * 4;
         let l = data[di] * 0.299 + data[di + 1] * 0.587 + data[di + 2] * 0.114;
         l = (l - 128) * cFactor + 128;
+        l -= settings.threshold;
         if (settings.vignette > 0) {
           const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2) / maxDist;
           l *= 1 - smoothstep(0.38, 1, dist) * (settings.vignette / 100) * 0.96;
@@ -129,8 +130,8 @@
       }
     }
 
-    if (settings.algorithm === 'bayer') bayerDither(lum, sw, sh, settings.threshold);
-    else floydSteinberg(lum, sw, sh, settings.threshold);
+    if (settings.algorithm === 'bayer') bayerDither(lum, sw, sh);
+    else floydSteinberg(lum, sw, sh);
 
     const out = sctx.createImageData(sw, sh);
     for (let p = 0, i = 0; p < lum.length; p += 1, i += 4) {
