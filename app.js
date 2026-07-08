@@ -13,31 +13,29 @@
   const glyphs = ['+', 'x', '#', '*', ':', '.', '0', '1', '<', '>', '[', ']', '{', '}', '|', '/', '\\', '-', '=', '_'];
   const icons = ['[+]', '[x]', '<+>', '<#>', '/\\', '\\/', '[[]]', '{-}', '<01>', '[::]', '|-|', '<*>', '{+}', '[><]', '<|>'];
   const labels = ['[SYS]', '[ERR]', '[RUN]', '[LOCK]', '<root>', '0x00FF', '101101', '[I/O]', '<bus>', '|:|', '>>>', '<<<'];
+  const gridSymbolPool = ['+', '.', ':', '::', 'x'];
   const bayer4 = [[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
 
   function rnd() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 0x100000000; }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function hexToRgb(hex) { const n = Number.parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
-  function rgbToHex(r, g, b) {
-    return '#' + [r, g, b].map((v) => Math.round(clamp(v, 0, 255)).toString(16).padStart(2, '0')).join('');
-  }
+  function rgbToHex(r, g, b) { return '#' + [r, g, b].map((v) => Math.round(clamp(v, 0, 255)).toString(16).padStart(2, '0')).join(''); }
   function hslToHex(h, s, l) {
     s /= 100; l /= 100;
     const c = (1 - Math.abs(2 * l - 1)) * s;
     const x = c * (1 - Math.abs((h / 60) % 2 - 1));
     const m = l - c / 2;
     let r = 0, g = 0, b = 0;
-    if (h < 60) { r = c; g = x; }
-    else if (h < 120) { r = x; g = c; }
-    else if (h < 180) { g = c; b = x; }
-    else if (h < 240) { g = x; b = c; }
-    else if (h < 300) { r = x; b = c; }
-    else { r = c; b = x; }
+    if (h < 60) [r, g, b] = [c, x, 0];
+    else if (h < 120) [r, g, b] = [x, c, 0];
+    else if (h < 180) [r, g, b] = [0, c, x];
+    else if (h < 240) [r, g, b] = [0, x, c];
+    else if (h < 300) [r, g, b] = [x, 0, c];
+    else [r, g, b] = [c, 0, x];
     return rgbToHex((r + m) * 255, (g + m) * 255, (b + m) * 255);
   }
-  function randomSaturatedColor() {
-    return hslToHex(Math.floor(rnd() * 360), 100, 48 + rnd() * 14);
-  }
+  function randomSaturatedColor() { return hslToHex(Math.floor(rnd() * 360), 90 + rnd() * 10, 48 + rnd() * 12); }
+
   function fitCover(img, w, h) { const s = Math.max(w / img.width, h / img.height); const iw = img.width * s; const ih = img.height * s; return [(w - iw) / 2, (h - ih) / 2, iw, ih]; }
   function smoothstep(edge0, edge1, x) { const t = clamp((x - edge0) / (edge1 - edge0), 0, 1); return t * t * (3 - 2 * t); }
 
@@ -50,7 +48,7 @@
   }
 
   function updateOutputs() {
-    ['scale','threshold','contrast','vignette','grain','imageScale','offsetX','offsetY','scale2','threshold2','contrast2','vignette2','grain2','imageScale2','offsetX2','offsetY2','textSize','density','overlay']
+    ['scale','threshold','contrast','vignette','grain','imageScale','offsetX','offsetY','scale2','threshold2','contrast2','vignette2','grain2','imageScale2','offsetX2','offsetY2','textSize','density','overlay','glyphCols','glyphRows','gridCols','gridRows']
       .forEach((name) => {
         const input = $(name + 'Input');
         const out = $(name + 'Out');
@@ -140,8 +138,6 @@
         const di = (y * sw + x) * 4;
         let l = data[di] * 0.299 + data[di + 1] * 0.587 + data[di + 2] * 0.114;
         l = (l - 128) * cFactor + 128;
-        // Threshold is intentionally applied as a strong luminance bias before error diffusion.
-        // This makes Floyd–Steinberg visibly change the hot/dark ratio instead of mostly preserving average brightness.
         l -= settings.threshold * 2.0;
         if (settings.vignette > 0) {
           const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2) / maxDist;
@@ -206,35 +202,6 @@
     return words.length ? words : systemWords;
   }
 
-  function drawRulers(w, h, cell, glyphColor, density) {
-    const count = Math.floor((8 + density * 18) * 0.8);
-    for (let i = 0; i < count; i += 1) {
-      const horizontal = rnd() > 0.4;
-      const size = cell * (0.74 + rnd() * 0.28);
-      if (horizontal) {
-        const ch = ['-', '=', '_', '·'][Math.floor(rnd() * 4)];
-        const len = 4 + Math.floor(rnd() * (10 + density * 24));
-        const pre = rnd() > 0.66 ? icons[Math.floor(rnd() * icons.length)] + ' ' : '';
-        drawText(pre + ch.repeat(len), w * (0.04 + rnd() * 0.88), h * (0.06 + rnd() * 0.88), size, glyphColor, 'left');
-      } else {
-        const ch = ['|', ':', '¦'][Math.floor(rnd() * 3)];
-        const rows = 3 + Math.floor(rnd() * (4 + density * 10));
-        const x = w * (0.05 + rnd() * 0.9);
-        const y = h * (0.06 + rnd() * 0.84);
-        for (let j = 0; j < rows; j += 1) drawText(ch, x, y + j * cell * 0.85, size, glyphColor, 'center');
-      }
-    }
-  }
-
-  function drawIcons(w, h, cell, glyphColor, density) {
-    const count = Math.floor(6 + density * ((w + h) / 46));
-    for (let i = 0; i < count; i += 1) {
-      const r = rnd();
-      const text = r < 0.36 ? icons[Math.floor(rnd() * icons.length)] : r < 0.72 ? labels[Math.floor(rnd() * labels.length)] : glyphs[Math.floor(rnd() * glyphs.length)].repeat(2 + Math.floor(rnd() * 7));
-      drawText(text, w * (0.04 + rnd() * 0.92), h * (0.05 + rnd() * 0.9), cell * (0.7 + rnd() * 0.42), glyphColor, rnd() > 0.5 ? 'left' : 'center');
-    }
-  }
-
   function shuffledWords(words) {
     const arr = words.map((w) => w.toUpperCase());
     for (let i = arr.length - 1; i > 0; i -= 1) {
@@ -244,35 +211,84 @@
     return arr;
   }
 
-  function drawWords(w, h, cell, wordColor, density, words) {
+  function getGridPositions(w, h, cols, rows, marginRatio = 0.07) {
+    const marginX = w * marginRatio;
+    const marginY = h * marginRatio;
+    const usableW = Math.max(1, w - marginX * 2);
+    const usableH = Math.max(1, h - marginY * 2);
+    const positions = [];
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const x = cols === 1 ? w / 2 : marginX + (usableW * col) / (cols - 1);
+        const y = rows === 1 ? h / 2 : marginY + (usableH * row) / (rows - 1);
+        positions.push({ x, y, col, row });
+      }
+    }
+    return positions;
+  }
+
+  function glyphParticleString() {
+    const r = rnd();
+    if (r < 0.24) return icons[Math.floor(rnd() * icons.length)];
+    if (r < 0.46) return labels[Math.floor(rnd() * labels.length)];
+    if (r < 0.7) return glyphs[Math.floor(rnd() * glyphs.length)].repeat(2 + Math.floor(rnd() * 5));
+    const horiz = rnd() > 0.35;
+    if (horiz) {
+      const ch = ['-', '=', '_', '·'][Math.floor(rnd() * 4)];
+      return ch.repeat(3 + Math.floor(rnd() * 8));
+    }
+    const ch = ['|', ':', '¦'][Math.floor(rnd() * 3)];
+    return ch.repeat(2 + Math.floor(rnd() * 4));
+  }
+
+  function drawSymbolGrid(w, h, cell, glyphColor) {
+    const cols = Math.max(2, Number($('gridColsInput').value) || 7);
+    const rows = Math.max(2, Number($('gridRowsInput').value) || 7);
+    const mode = $('gridSymbolInput').value;
+    const positions = getGridPositions(w, h, cols, rows, 0.06);
+    const size = cell * 0.64;
+    positions.forEach(({ x, y }) => {
+      const symbol = mode === 'random' ? gridSymbolPool[Math.floor(rnd() * gridSymbolPool.length)] : mode;
+      drawText(symbol, x, y, size, glyphColor, 'center', 500);
+    });
+  }
+
+  function drawGlyphParticlesGrid(w, h, cell, glyphColor, density) {
+    const cols = Math.max(3, Number($('glyphColsInput').value) || 7);
+    const rows = Math.max(3, Number($('glyphRowsInput').value) || 7);
+    const positions = getGridPositions(w, h, cols, rows, 0.09);
+    for (let i = positions.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rnd() * (i + 1));
+      [positions[i], positions[j]] = [positions[j], positions[i]];
+    }
+    const count = Math.max(0, Math.round(positions.length * density));
+    for (let i = 0; i < count; i += 1) {
+      const pos = positions[i];
+      const stepX = cols > 1 ? (w * 0.82) / (cols - 1) : w * 0.1;
+      const stepY = rows > 1 ? (h * 0.82) / (rows - 1) : h * 0.1;
+      const jitterX = (rnd() - 0.5) * stepX * 0.24;
+      const jitterY = (rnd() - 0.5) * stepY * 0.24;
+      const txt = glyphParticleString();
+      const size = cell * (0.62 + rnd() * 0.55);
+      drawText(txt, pos.x + jitterX, pos.y + jitterY, size, glyphColor, 'center', 500);
+    }
+  }
+
+  function drawWordsLayer(w, h, cell, wordColor, density, words) {
     const baseWords = shuffledWords(words);
     const extraCount = Math.floor(density * Math.max(2, words.length * 1.4));
     const totalCount = Math.max(words.length, baseWords.length + extraCount);
-
     for (let i = 0; i < totalCount; i += 1) {
-      const word = i < baseWords.length
-        ? baseWords[i]
-        : words[Math.floor(rnd() * words.length)].toUpperCase();
+      const word = i < baseWords.length ? baseWords[i] : words[Math.floor(rnd() * words.length)].toUpperCase();
       const sizeJitter = 0.78 + rnd() * 0.72;
-      drawText(
-        word,
-        w * (0.08 + rnd() * 0.84),
-        h * (0.1 + rnd() * 0.8),
-        cell * sizeJitter,
-        wordColor,
-        'center',
-        700
-      );
+      drawText(word, w * (0.08 + rnd() * 0.84), h * (0.1 + rnd() * 0.8), cell * sizeJitter, wordColor, 'center', 700);
     }
   }
 
   function updateSecondLayerUI() {
     const enabled = $('enableSecondLayerInput').checked;
     const ids = ['imageInput2','algorithm2Input','scale2Input','threshold2Input','contrast2Input','vignette2Input','grain2Input','imageScale2Input','offsetX2Input','offsetY2Input','hot2Input'];
-    ids.forEach((id) => {
-      const el = $(id);
-      if (el) el.disabled = !enabled;
-    });
+    ids.forEach((id) => { const el = $(id); if (el) el.disabled = !enabled; });
   }
 
   function drawOverlay() {
@@ -289,9 +305,11 @@
     ctx.globalCompositeOperation = $('blendModeInput').value;
     ctx.globalAlpha = opacity;
     ctx.shadowBlur = 0;
-    drawRulers(w, h, cell, glyphColor, density);
-    drawIcons(w, h, cell, glyphColor, density);
-    drawWords(w, h, cell, wordColor, density, words);
+
+    if ($('enableSymbolGridInput').checked) drawSymbolGrid(w, h, cell, glyphColor);
+    if ($('enableGlyphLayerInput').checked) drawGlyphParticlesGrid(w, h, cell, glyphColor, density);
+    if ($('enableWordsLayerInput').checked) drawWordsLayer(w, h, cell, wordColor, density, words);
+
     ctx.restore();
   }
 
@@ -333,8 +351,11 @@
   [
     'widthInput','heightInput','algorithmInput','scaleInput','thresholdInput','contrastInput','vignetteInput','grainInput','imageScaleInput','offsetXInput','offsetYInput','darkInput','hotInput',
     'enableSecondLayerInput','algorithm2Input','scale2Input','threshold2Input','contrast2Input','vignette2Input','grain2Input','imageScale2Input','offsetX2Input','offsetY2Input','hot2Input',
-    'wordsInput','blendModeInput','fontInput','textSizeInput','densityInput','overlayInput','wordColorInput','glyphColorInput'
-  ].forEach((id) => { const el = $(id); el.addEventListener('input', render); el.addEventListener('change', render); });
+    'blendModeInput','fontInput','textSizeInput','overlayInput',
+    'enableWordsLayerInput','wordsInput','wordColorInput',
+    'enableGlyphLayerInput','densityInput','glyphColsInput','glyphRowsInput','glyphColorInput',
+    'enableSymbolGridInput','gridColsInput','gridRowsInput','gridSymbolInput'
+  ].forEach((id) => { const el = $(id); if (el) { el.addEventListener('input', render); el.addEventListener('change', render); } });
 
   render();
 })();

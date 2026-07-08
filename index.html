@@ -103,22 +103,52 @@
       <details class="control-block collapsible" open>
         <summary>ASCII Graphics</summary>
         <div class="block-body">
-          <label class="field">Words / comma separated<input id="wordsInput" type="text" value="DELTA, NULL SIGNAL, BECOME THE EXIT" placeholder="DELTA, NULL SIGNAL, EXIT" /></label>
           <div class="two">
             <label class="field">Blend mode<select id="blendModeInput"><option value="source-over" selected>Normal</option><option value="multiply">Multiply</option><option value="lighter">Add</option></select></label>
             <label class="field">Font<select id="fontInput"><option value="consolas" selected>Consolas</option><option value="cascadia">Cascadia Mono</option><option value="courier">Courier New</option><option value="monospace">System Monospace</option></select></label>
           </div>
           <div class="two">
             <label class="field">Size <output id="textSizeOut">100</output><input id="textSizeInput" type="range" min="60" max="180" value="100" /></label>
-            <label class="field">Density <output id="densityOut">70</output><input id="densityInput" type="range" min="0" max="100" value="70" /></label>
-          </div>
-          <div class="two">
             <label class="field">Opacity <output id="overlayOut">100</output><input id="overlayInput" type="range" min="0" max="100" value="100" /></label>
-            <label class="field">Word color<input id="wordColorInput" type="color" value="#d8ffd8" /></label>
           </div>
-          <div class="one">
-            <label class="field">Glyph color<input id="glyphColorInput" type="color" value="#29ff7a" /></label>
-          </div>
+
+          <details class="sub-block collapsible" open>
+            <summary>Words layer</summary>
+            <div class="block-body">
+              <label class="toggle-line"><input id="enableWordsLayerInput" type="checkbox" checked /> Enable words</label>
+              <label class="field">Words / comma separated<input id="wordsInput" type="text" value="DELTA, NULL SIGNAL, BECOME THE EXIT" placeholder="DELTA, NULL SIGNAL, EXIT" /></label>
+              <div class="one">
+                <label class="field">Word color<input id="wordColorInput" type="color" value="#d8ffd8" /></label>
+              </div>
+            </div>
+          </details>
+
+          <details class="sub-block collapsible" open>
+            <summary>Glyph particles layer</summary>
+            <div class="block-body">
+              <label class="toggle-line"><input id="enableGlyphLayerInput" type="checkbox" checked /> Enable glyph particles</label>
+              <div class="three">
+                <label class="field">Density <output id="densityOut">70</output><input id="densityInput" type="range" min="0" max="100" value="70" /></label>
+                <label class="field">Cols <output id="glyphColsOut">7</output><input id="glyphColsInput" type="range" min="3" max="12" value="7" /></label>
+                <label class="field">Rows <output id="glyphRowsOut">7</output><input id="glyphRowsInput" type="range" min="3" max="12" value="7" /></label>
+              </div>
+              <div class="one">
+                <label class="field">Glyph color<input id="glyphColorInput" type="color" value="#29ff7a" /></label>
+              </div>
+            </div>
+          </details>
+
+          <details class="sub-block collapsible" open>
+            <summary>Grid layer</summary>
+            <div class="block-body">
+              <label class="toggle-line"><input id="enableSymbolGridInput" type="checkbox" /> Enable symbol grid</label>
+              <div class="three">
+                <label class="field">Cols <output id="gridColsOut">7</output><input id="gridColsInput" type="range" min="2" max="20" value="7" /></label>
+                <label class="field">Rows <output id="gridRowsOut">7</output><input id="gridRowsInput" type="range" min="2" max="20" value="7" /></label>
+                <label class="field">Symbol<select id="gridSymbolInput"><option value="+" selected>+</option><option value=".">.</option><option value=":">:</option><option value="::">::</option><option value="x">x</option><option value="random">Random</option></select></label>
+              </div>
+            </div>
+          </details>
         </div>
       </details>
 
