@@ -22,3 +22,6 @@ Static HTML/CSS/JS tool for GitHub Pages.
 ## v12 changes
 - Stronger Floyd–Steinberg threshold response.
 - Offset X/Y compacted into a single row per image layer.
+
+- All entered words are randomized across the screen with varied font size
+- Random all colors button for saturated palette generation

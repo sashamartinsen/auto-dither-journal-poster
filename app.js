@@ -18,6 +18,26 @@
   function rnd() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 0x100000000; }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function hexToRgb(hex) { const n = Number.parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map((v) => Math.round(clamp(v, 0, 255)).toString(16).padStart(2, '0')).join('');
+  }
+  function hslToHex(h, s, l) {
+    s /= 100; l /= 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = l - c / 2;
+    let r = 0, g = 0, b = 0;
+    if (h < 60) { r = c; g = x; }
+    else if (h < 120) { r = x; g = c; }
+    else if (h < 180) { g = c; b = x; }
+    else if (h < 240) { g = x; b = c; }
+    else if (h < 300) { r = x; b = c; }
+    else { r = c; b = x; }
+    return rgbToHex((r + m) * 255, (g + m) * 255, (b + m) * 255);
+  }
+  function randomSaturatedColor() {
+    return hslToHex(Math.floor(rnd() * 360), 100, 48 + rnd() * 14);
+  }
   function fitCover(img, w, h) { const s = Math.max(w / img.width, h / img.height); const iw = img.width * s; const ih = img.height * s; return [(w - iw) / 2, (h - ih) / 2, iw, ih]; }
   function smoothstep(edge0, edge1, x) { const t = clamp((x - edge0) / (edge1 - edge0), 0, 1); return t * t * (3 - 2 * t); }
 
@@ -215,11 +235,34 @@
     }
   }
 
+  function shuffledWords(words) {
+    const arr = words.map((w) => w.toUpperCase());
+    for (let i = arr.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rnd() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
   function drawWords(w, h, cell, wordColor, density, words) {
-    const count = Math.floor(3 + density * 6);
-    for (let i = 0; i < count; i += 1) {
-      const word = words[i % words.length].toUpperCase();
-      drawText(word, w * (0.1 + rnd() * 0.8), h * (0.12 + rnd() * 0.76), cell * (0.95 + rnd() * 0.45), wordColor, 'center', 700);
+    const baseWords = shuffledWords(words);
+    const extraCount = Math.floor(density * Math.max(2, words.length * 1.4));
+    const totalCount = Math.max(words.length, baseWords.length + extraCount);
+
+    for (let i = 0; i < totalCount; i += 1) {
+      const word = i < baseWords.length
+        ? baseWords[i]
+        : words[Math.floor(rnd() * words.length)].toUpperCase();
+      const sizeJitter = 0.78 + rnd() * 0.72;
+      drawText(
+        word,
+        w * (0.08 + rnd() * 0.84),
+        h * (0.1 + rnd() * 0.8),
+        cell * sizeJitter,
+        wordColor,
+        'center',
+        700
+      );
     }
   }
 
@@ -252,6 +295,15 @@
     ctx.restore();
   }
 
+  function randomizeAllColors() {
+    $('darkInput').value = hslToHex(Math.floor(rnd() * 360), 100, 4 + rnd() * 8);
+    $('hotInput').value = randomSaturatedColor();
+    $('hot2Input').value = randomSaturatedColor();
+    $('wordColorInput').value = randomSaturatedColor();
+    $('glyphColorInput').value = randomSaturatedColor();
+    render();
+  }
+
   function render() { updateOutputs(); updateSecondLayerUI(); drawDither(); drawOverlay(); }
 
   function loadFile(file, slot) {
@@ -269,6 +321,7 @@
   $('imageInput').addEventListener('change', (event) => loadFile(event.target.files[0], 1));
   $('imageInput2').addEventListener('change', (event) => loadFile(event.target.files[0], 2));
   $('randomBtn').addEventListener('click', () => { seed = Math.floor(Math.random() * 0xffffffff); render(); });
+  $('randomColorsBtn').addEventListener('click', () => { seed = Math.floor(Math.random() * 0xffffffff); randomizeAllColors(); });
   $('renderBtn').addEventListener('click', render);
   $('downloadBtn').addEventListener('click', () => { const a = document.createElement('a'); a.download = `dither_ascii_${Date.now()}.png`; a.href = canvas.toDataURL('image/png'); a.click(); });
 
