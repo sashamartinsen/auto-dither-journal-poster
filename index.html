@@ -15,11 +15,6 @@
         <div class="brand__subtitle">photo → dither → ASCII overlay</div>
       </header>
 
-      <label class="dropzone" for="imageInput" id="dropzone">
-        <input id="imageInput" type="file" accept="image/*" />
-        <span>PRIMARY IMAGE</span>
-        <small>Drop / select the base image</small>
-      </label>
 
       <details class="control-block collapsible" open>
         <summary>Image / Dither</summary>
@@ -30,8 +25,13 @@
           </div>
 
           <details class="sub-block collapsible" open>
-            <summary>Base layer</summary>
+            <summary>Primary image layer</summary>
             <div class="block-body">
+              <label class="dropzone dropzone--small" for="imageInput" id="dropzone">
+                <input id="imageInput" type="file" accept="image/*" />
+                <span>PRIMARY IMAGE</span>
+                <small>Base image</small>
+              </label>
               <div class="two">
                 <label class="field">Algorithm<select id="algorithmInput"><option value="fs" selected>Floyd–Steinberg</option><option value="bayer">Bayer 4×4</option></select></label>
                 <label class="field">Dither scale <output id="scaleOut">3</output><input id="scaleInput" type="range" min="3" max="12" value="3" /></label>
@@ -145,6 +145,9 @@
               <div class="three">
                 <label class="field">Cols <output id="gridColsOut">7</output><input id="gridColsInput" type="range" min="2" max="20" value="7" /></label>
                 <label class="field">Rows <output id="gridRowsOut">7</output><input id="gridRowsInput" type="range" min="2" max="20" value="7" /></label>
+                <label class="field">Grid size <output id="gridSizeOut">100</output><input id="gridSizeInput" type="range" min="40" max="220" value="100" /></label>
+              </div>
+              <div class="one">
                 <label class="field">Symbol<select id="gridSymbolInput"><option value="+" selected>+</option><option value=".">.</option><option value=":">:</option><option value="::">::</option><option value="x">x</option><option value="random">Random</option></select></label>
               </div>
             </div>

@@ -48,7 +48,7 @@
   }
 
   function updateOutputs() {
-    ['scale','threshold','contrast','vignette','grain','imageScale','offsetX','offsetY','scale2','threshold2','contrast2','vignette2','grain2','imageScale2','offsetX2','offsetY2','textSize','density','overlay','glyphCols','glyphRows','gridCols','gridRows']
+    ['scale','threshold','contrast','vignette','grain','imageScale','offsetX','offsetY','scale2','threshold2','contrast2','vignette2','grain2','imageScale2','offsetX2','offsetY2','textSize','density','overlay','glyphCols','glyphRows','gridCols','gridRows','gridSize']
       .forEach((name) => {
         const input = $(name + 'Input');
         const out = $(name + 'Out');
@@ -246,7 +246,7 @@
     const rows = Math.max(2, Number($('gridRowsInput').value) || 7);
     const mode = $('gridSymbolInput').value;
     const positions = getGridPositions(w, h, cols, rows, 0.06);
-    const size = cell * 0.64;
+    const size = cell * 0.64 * ((Number($('gridSizeInput').value) || 100) / 100);
     positions.forEach(({ x, y }) => {
       const symbol = mode === 'random' ? gridSymbolPool[Math.floor(rnd() * gridSymbolPool.length)] : mode;
       drawText(symbol, x, y, size, glyphColor, 'center', 500);
@@ -354,7 +354,7 @@
     'blendModeInput','fontInput','textSizeInput','overlayInput',
     'enableWordsLayerInput','wordsInput','wordColorInput',
     'enableGlyphLayerInput','densityInput','glyphColsInput','glyphRowsInput','glyphColorInput',
-    'enableSymbolGridInput','gridColsInput','gridRowsInput','gridSymbolInput'
+    'enableSymbolGridInput','gridColsInput','gridRowsInput','gridSizeInput','gridSymbolInput'
   ].forEach((id) => { const el = $(id); if (el) { el.addEventListener('input', render); el.addEventListener('change', render); } });
 
   render();
