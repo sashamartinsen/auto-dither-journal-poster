@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
   <title>DITHER//ASCII POSTER TOOL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -39,23 +42,37 @@
 
       <div class="two">
         <label class="field">
-          Dither scale <output id="scaleOut">3</output>
-          <input id="scaleInput" type="range" min="1" max="10" value="3" />
+          Dither algorithm
+          <select id="algorithmInput">
+            <option value="fs" selected>Floyd–Steinberg</option>
+            <option value="bayer">Bayer 4×4</option>
+          </select>
         </label>
         <label class="field">
-          Threshold <output id="thresholdOut">0</output>
-          <input id="thresholdInput" type="range" min="-90" max="90" value="0" />
+          Dither scale <output id="scaleOut">3</output>
+          <input id="scaleInput" type="range" min="1" max="10" value="3" />
         </label>
       </div>
 
       <div class="two">
         <label class="field">
+          Threshold <output id="thresholdOut">0</output>
+          <input id="thresholdInput" type="range" min="-90" max="90" value="0" />
+        </label>
+        <label class="field">
           Vignette <output id="vignetteOut">28</output>
           <input id="vignetteInput" type="range" min="0" max="100" value="28" />
         </label>
+      </div>
+
+      <div class="two">
         <label class="field">
           Grain <output id="grainOut">24</output>
           <input id="grainInput" type="range" min="0" max="90" value="24" />
+        </label>
+        <label class="field">
+          Overlay <output id="overlayOut">70</output>
+          <input id="overlayInput" type="range" min="0" max="100" value="70" />
         </label>
       </div>
 
@@ -72,18 +89,18 @@
 
       <div class="two">
         <label class="field">
-          ASCII
-          <input id="asciiInput" type="color" value="#29ff7a" />
+          Glyph color
+          <input id="glyphColorInput" type="color" value="#29ff7a" />
         </label>
         <label class="field">
-          Overlay <output id="overlayOut">70</output>
-          <input id="overlayInput" type="range" min="0" max="100" value="70" />
+          Word color
+          <input id="wordColorInput" type="color" value="#d8ffd8" />
         </label>
       </div>
 
       <div class="one">
         <label class="field">
-          Text size <output id="textSizeOut">100</output>
+          Overlay size <output id="textSizeOut">100</output>
           <input id="textSizeInput" type="range" min="60" max="160" value="100" />
         </label>
       </div>

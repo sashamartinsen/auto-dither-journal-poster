@@ -5,9 +5,11 @@ Static HTML/CSS/JS tool for GitHub Pages.
 ## Features
 - Upload image
 - Convert image to 2-color mono dither
+- Choose dithering algorithm: Floyd–Steinberg or Bayer 4×4
 - Adjustable vignette before dithering
-- Green ASCII overlay with center-focused composition
-- Regenerating ASCII frame / grid / edge glyphs
+- Separate colors for words and for ASCII glyph graphics
+- Console-like overlay font (`Share Tech Mono`)
+- Regenerating experimental ASCII composition with randomized boxes, labels, and glyph clusters
 - Custom words via comma-separated input
 - Export final PNG
 
