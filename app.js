@@ -66,16 +66,17 @@
     }
   }
 
-  function getLayerSettings(prefix = '') {
+  function getLayerSettings(suffix = '') {
+    const id = (base) => $(base + suffix + 'Input');
     return {
-      algorithm: $(prefix + 'algorithmInput').value,
-      scale: clamp(Number($(prefix + 'scaleInput').value) || 3, 3, 12),
-      threshold: Number($(prefix + 'thresholdInput').value) || 0,
-      contrast: Number($(prefix + 'contrastInput').value) || 0,
-      vignette: Number($(prefix + 'vignetteInput').value) || 0,
-      grain: Number($(prefix + 'grainInput').value) || 0,
-      dark: prefix ? [0,0,0] : hexToRgb($('darkInput').value),
-      hot: hexToRgb($(prefix + 'hotInput').value)
+      algorithm: id('algorithm').value,
+      scale: clamp(Number(id('scale').value) || 3, 3, 12),
+      threshold: Number(id('threshold').value) || 0,
+      contrast: Number(id('contrast').value) || 0,
+      vignette: Number(id('vignette').value) || 0,
+      grain: Number(id('grain').value) || 0,
+      dark: suffix ? [0, 0, 0] : hexToRgb($('darkInput').value),
+      hot: hexToRgb((suffix ? $('hot2Input') : $('hotInput')).value)
     };
   }
 
@@ -150,7 +151,7 @@
     ctx.drawImage(baseCanvas, 0, 0, w, h);
 
     if ($('enableSecondLayerInput').checked && sourceImage2) {
-      const overlayCanvas = buildDitherCanvas(sourceImage2, getLayerSettings('2'), w, h, '', true);
+      const overlayCanvas = buildDitherCanvas(sourceImage2, getLayerSettings('2'), w, h, 'SECOND IMAGE', true);
       ctx.drawImage(overlayCanvas, 0, 0, w, h);
     }
   }
@@ -210,6 +211,15 @@
     }
   }
 
+  function updateSecondLayerUI() {
+    const enabled = $('enableSecondLayerInput').checked;
+    const ids = ['imageInput2','algorithm2Input','scale2Input','threshold2Input','contrast2Input','vignette2Input','grain2Input','hot2Input'];
+    ids.forEach((id) => {
+      const el = $(id);
+      if (el) el.disabled = !enabled;
+    });
+  }
+
   function drawOverlay() {
     const w = canvas.width, h = canvas.height;
     const opacity = Number($('overlayInput').value) / 100;
@@ -230,7 +240,7 @@
     ctx.restore();
   }
 
-  function render() { updateOutputs(); drawDither(); drawOverlay(); }
+  function render() { updateOutputs(); updateSecondLayerUI(); drawDither(); drawOverlay(); }
 
   function loadFile(file, slot) {
     if (!file || !file.type.startsWith('image/')) return;
